@@ -13,40 +13,18 @@
     $('#education-list').innerHTML = data.education.map(item => `<article class="education-entry"><span class="education-entry__date">${escapeHTML(item.period)}</span><div><h4>${escapeHTML(item.qualification)}</h4><p>${placeholder(item.school)}</p><small>${placeholder(item.detail)}</small></div></article>`).join('');
     $('#skills-table').innerHTML = data.skills.map(item => `<tr><td data-label="Area">${escapeHTML(item.area)}</td><td data-label="Skill">${escapeHTML(item.skill)}</td><td data-label="Level">${item.level ? `<span class="skill-level">${escapeHTML(item.level)}</span>` : placeholder('[Not assessed]')}</td><td data-label="Evidence / Project">${safeHref(item.evidenceHref) ? `<a class="table-link" href="${escapeHTML(safeHref(item.evidenceHref))}" target="_blank" rel="noreferrer">${escapeHTML(item.evidence)} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>` : escapeHTML(item.evidence)}</td></tr>`).join('');
     $('#project-list').innerHTML = data.projects.map((item, index) => `<article class="project-card reveal"><div class="project-card__visual project-card__visual--${index + 1}"><span>${String(index + 1).padStart(2, '0')} / ${escapeHTML(item.category)}</span><i class="bi ${index === 0 ? 'bi-window' : index === 1 ? 'bi-database' : 'bi-tools'}" aria-hidden="true"></i><span class="project-card__visual-label">${escapeHTML(item.status)}</span></div><div class="project-card__body"><div class="project-card__title"><h3>${placeholder(item.title)}</h3><span class="project-arrow"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></div><p>${placeholder(item.description)}</p><div class="tag-row">${item.tech.map(tag => `<span>${escapeHTML(tag)}</span>`).join('')}</div><div class="project-card__links">${safeHref(item.github) ? `<a href="${escapeHTML(safeHref(item.github))}" target="_blank" rel="noreferrer">Repository <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>` : '<span>Starter idea</span>'}${safeHref(item.live) ? `<a href="${escapeHTML(safeHref(item.live))}" target="_blank" rel="noreferrer">Live demo <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>` : ''}</div></div></article>`).join('');
-    const webProject = data.projects[0];
-    if (webProject) {
-      const webDetails = $('.web-project__main');
-      $('.status-tag', webDetails).textContent = webProject.status;
-      $('h3', webDetails).textContent = webProject.title;
-      $('p', webDetails).textContent = webProject.description;
-      $('.tag-row', webDetails).innerHTML = webProject.tech.map(tag => `<span>${escapeHTML(tag)}</span>`).join('');
-      const [liveLink, repositoryLink] = $$('.web-project__links a', webDetails);
-      if (safeHref(webProject.live)) {
-        liveLink.href = safeHref(webProject.live);
-        liveLink.target = '_blank';
-        liveLink.rel = 'noreferrer';
-        liveLink.classList.remove('disabled-link');
-        liveLink.removeAttribute('aria-disabled');
-        liveLink.innerHTML = 'Live demo <i class="bi bi-arrow-up-right" aria-hidden="true"></i>';
-      }
-      if (safeHref(webProject.github)) {
-        repositoryLink.href = safeHref(webProject.github);
-        repositoryLink.target = '_blank';
-        repositoryLink.rel = 'noreferrer';
-        repositoryLink.classList.remove('disabled-link');
-        repositoryLink.removeAttribute('aria-disabled');
-        repositoryLink.innerHTML = 'Repository <i class="bi bi-arrow-up-right" aria-hidden="true"></i>';
-      }
-      if (webProject.thumb) {
-        const preview = $('.web-project__preview .preview-content');
-        const image = document.createElement('img');
-        image.className = 'web-project__preview-image';
-        image.src = webProject.thumb;
-        image.alt = `${webProject.title} homepage screenshot`;
-        image.loading = 'lazy';
-        preview.replaceChildren(image);
-      }
-    }
+    const webProjects = data.projects.filter(item => item.category === 'WEB DEVELOPMENT');
+    $('#web-project-list').innerHTML = webProjects.map((item, index) => {
+      const links = [
+        safeHref(item.live) ? `<a class="text-link" href="${escapeHTML(safeHref(item.live))}" target="_blank" rel="noreferrer">Live demo <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>` : '',
+        safeHref(item.github) ? `<a class="text-link" href="${escapeHTML(safeHref(item.github))}" target="_blank" rel="noreferrer">Repository <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>` : '',
+        index === 0 ? '<a class="text-link" href="#project-readme">Project README <i class="bi bi-arrow-down-right" aria-hidden="true"></i></a>' : ''
+      ].filter(Boolean).join('');
+      const preview = item.thumb
+        ? `<img class="web-project__preview-image" src="${escapeHTML(item.thumb)}" alt="${escapeHTML(item.title)} homepage screenshot" loading="lazy">`
+        : '<div class="preview-line"></div><div class="preview-line preview-line--short"></div><div class="preview-box"></div>';
+      return `<article class="web-project"><div class="web-project__index">PROJECT<br><strong>${String(index + 1).padStart(2, '0')}</strong></div><div class="web-project__main"><span class="status-tag">${escapeHTML(item.status)}</span><h3>${placeholder(item.title)}</h3><p>${placeholder(item.description)}</p><div class="tag-row">${item.tech.map(tag => `<span>${escapeHTML(tag)}</span>`).join('')}</div><div class="web-project__links">${links}</div></div><div class="web-project__preview"><div class="preview-top"><i></i><i></i><i></i><span>PROJECT PREVIEW</span></div><div class="preview-content">${preview}</div></div></article>`;
+    }).join('');
     const fields = data.readmeFields.map((field, index) => `<div class="readme-field"><span>${String(index + 1).padStart(2, '0')}</span><div><strong>${escapeHTML(field.label)}</strong><p>${escapeHTML(field.detail)}</p></div></div>`).join('');
     $('#readme-fields').innerHTML = fields;
     $('#readme-fields-duplicate').innerHTML = fields;
@@ -66,7 +44,7 @@
       documentationSection.classList.add('content-section', 'section-shell');
       webDevelopmentSection.insertAdjacentElement('afterend', documentationSection);
     }
-    const sections = [['home', 'Home'], ['about', 'About Me'], ['skills', 'Technical Skills'], ['projects', 'Projects'], ['database', 'Database Project'], ['data-analysis', 'Data Analysis'], ['cybersecurity', 'Cybersecurity'], ['web-development', 'Web Development'], ['project-documentation', 'Project Documentation / Step 16'], ['cloud', 'Cloud / Deployment'], ['ai-literacy', 'AI Project or AI Literacy Evidence'], ['troubleshooting', 'Troubleshooting'], ['resume', 'Resume'], ['certificates', 'Certificates / Achievements'], ['github', 'GitHub'], ['linkedin', 'LinkedIn'], ['interview', 'Interview / Employability Evidence'], ['career-plan', 'Career Plan'], ['reflection', 'Reflection'], ['contact', 'Contact Information']];
+    const sections = [['home', 'Home'], ['about', 'About Me'], ['skills', 'Technical Skills'], ['projects', 'Projects'], ['interview', 'Mock Interview'], ['database', 'Database Project'], ['data-analysis', 'Data Analysis'], ['cybersecurity', 'Cybersecurity'], ['web-development', 'Web Development'], ['project-documentation', 'Project Documentation / Step 16'], ['cloud', 'Cloud / Deployment'], ['ai-literacy', 'AI Project or AI Literacy Evidence'], ['troubleshooting', 'Troubleshooting'], ['resume', 'Resume'], ['certificates', 'Certificates / Achievements'], ['github', 'GitHub'], ['linkedin', 'LinkedIn'], ['career-plan', 'Career Plan'], ['reflection', 'Reflection'], ['contact', 'Contact Information']];
     $('#section-menu').innerHTML = sections.map(([id, label], index) => `<a href="#${id}"><span>${String(index + 1).padStart(2, '0')}</span>${label}</a>`).join('');
     $('#current-year').textContent = new Date().getFullYear();
     const socialLinks = [
